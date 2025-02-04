@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
-
 const cors = require("cors");
+const axios = require("axios");
 
 app.use(cors());
 
@@ -15,9 +15,15 @@ app.get("/api/reviews", (request, response) => {
   response.json(reviews);
 });
 
-app.get("/api/byalbum/:id", (request, response) => {
+app.get("/api/byalbum/:id", async (request, response) => {
   const id = request.params.id;
   const results = reviews.filter((e) => e.album == id);
+  for (const revi of results) {
+    const username = await axios.get(
+      `http://localhost:3001/api/user/${revi.user}`
+    );
+    revi.user = username.data.username;
+  }
   response.json(results);
 });
 

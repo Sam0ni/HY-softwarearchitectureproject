@@ -19,6 +19,33 @@ let albums = [
     songs: ["Modern Love", "China Girl", "Let's Dance"],
     runtime: "38:29",
   },
+  {
+    id: "3",
+    name: "Rise And Fall Of Ziggy Stardust And The Spiders From Mars",
+    artist: "2",
+    songs: [
+      "Five Years",
+      "Ziggy Stardust",
+      "Starman",
+      "Suffragette City",
+      "Lady Stardust",
+    ],
+    runtime: "42:21",
+  },
+  {
+    id: "4",
+    name: "Station To Station",
+    artist: "2",
+    songs: [
+      "Station To Station",
+      "TVC15",
+      "Stay",
+      "Wild Is The Wind",
+      "Golden Years",
+      "Word On The Wing",
+    ],
+    runtime: "39:39",
+  },
 ];
 
 let artists = [
@@ -40,6 +67,14 @@ app.get("/api/albums/:id", (request, response) => {
   copy = structuredClone(album);
   copy.artist = artists.find((e) => e.id == album.artist);
   response.json(copy);
+});
+
+app.get("/api/artists/:id", (request, response) => {
+  const id = request.params.id;
+  const artist = artists.find((e) => e.id == id);
+  const artistAlbums = albums.filter((e) => e.artist == artist.id);
+  const res = { artist, albums: artistAlbums };
+  response.json(res);
 });
 
 const PORT = 3002;
