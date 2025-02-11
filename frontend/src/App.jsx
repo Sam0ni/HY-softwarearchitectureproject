@@ -1,5 +1,11 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -167,10 +173,90 @@ const SingleAlbum = () => {
   );
 };
 
+const HiddenTab = forwardRef(({ buttonText, buttonStyle, children }, ref) => {
+  const [hidden, setHidden] = useState(false);
+  HiddenTab.displayName = "HiddenTab";
+
+  const toggle = () => {
+    setHidden(!hidden);
+  };
+
+  useImperativeHandle(ref, () => {
+    return {
+      toggle,
+    };
+  });
+
+  return (
+    <div style={buttonStyle}>
+      {hidden && children}
+      <button onClick={() => setHidden(!hidden)}>{buttonText}</button>
+    </div>
+  );
+});
+
+const CredentialsForm = ({
+  buttonText,
+  onSumbit,
+  username,
+  password,
+  setUsername,
+  setPassword,
+}) => {
+  return (
+    <form onSubmit={onSumbit}>
+      <input
+        name="username"
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
+      />
+      <input
+        name="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+      />
+      <button type="submit">{buttonText}</button>
+    </form>
+  );
+};
+
 const App = () => {
   const padding = {
     padding: 5,
   };
+  const loginFormRef = useRef();
+  const registerFormRef = useRef();
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const clearForms = () => {
+    setUsername("");
+    setPassword("");
+  };
+
+  const submitLogin = (event) => {
+    event.preventDefault();
+    axios
+      .post("http://localhost:3001/api/login", { username, password })
+      .then((response) => {
+        console.log(response);
+        clearForms();
+        loginFormRef.current.toggle();
+      });
+  };
+
+  const submitRegister = (event) => {
+    event.preventDefault();
+    axios
+      .post("http://localhost:3001/api/register", { username, password })
+      .then((response) => {
+        console.log(response);
+        clearForms();
+        registerFormRef.current.toggle();
+      });
+  };
+
   return (
     <Router>
       <div>
@@ -183,6 +269,30 @@ const App = () => {
         <Link style={padding} to="/artists">
           Artists
         </Link>
+        <HiddenTab
+          buttonText="Register"
+          buttonStyle={padding}
+          ref={registerFormRef}
+        >
+          <CredentialsForm
+            buttonText="Register new user"
+            onSumbit={submitRegister}
+            username={username}
+            password={password}
+            setUsername={setUsername}
+            setPassword={setPassword}
+          />
+        </HiddenTab>
+        <HiddenTab buttonText="Login" buttonStyle={padding} ref={loginFormRef}>
+          <CredentialsForm
+            buttonText="Log In"
+            onSumbit={submitLogin}
+            username={username}
+            password={password}
+            setUsername={setUsername}
+            setPassword={setPassword}
+          />
+        </HiddenTab>
       </div>
 
       <Routes>
