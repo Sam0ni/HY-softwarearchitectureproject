@@ -152,7 +152,11 @@ const SingleAlbum = () => {
       <p>Track List:</p>
       <ol>
         {albumInfo.songs.map((song) => {
-          return <li key={song}>{song}</li>;
+          return (
+            <li key={song.id}>
+              {song.name} - {song.runtime}
+            </li>
+          );
         })}
       </ol>
       <p>Reviews:</p>
@@ -229,21 +233,38 @@ const App = () => {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    const storageUser = window.localStorage.getItem("loggedUser");
+    if (storageUser) {
+      const user = JSON.parse(storageUser);
+      setUser(user);
+      setToken(user.token);
+    }
+  }, []);
 
   const clearForms = () => {
     setUsername("");
     setPassword("");
   };
 
-  const submitLogin = (event) => {
+  const submitLogin = async (event) => {
     event.preventDefault();
-    axios
-      .post("http://localhost:3001/api/login", { username, password })
-      .then((response) => {
-        console.log(response);
-        clearForms();
-        loginFormRef.current.toggle();
+    try {
+      const response = await axios.post("http://localhost:3001/api/login", {
+        username,
+        password,
       });
+      window.localStorage.setItem("loggedUser", JSON.stringify(response.data));
+      setUser(response.data);
+      setToken(response.data.token);
+      clearForms();
+      loginFormRef.current.toggle();
+    } catch (exception) {
+      console.log(exception);
+    }
   };
 
   const submitRegister = (event) => {
@@ -254,7 +275,16 @@ const App = () => {
         console.log(response);
         clearForms();
         registerFormRef.current.toggle();
+      })
+      .catch((error) => {
+        console.log(error);
       });
+  };
+
+  const logOut = () => {
+    window.localStorage.removeItem("loggedUser");
+    setUser(null);
+    setToken(null);
   };
 
   return (
@@ -269,30 +299,43 @@ const App = () => {
         <Link style={padding} to="/artists">
           Artists
         </Link>
-        <HiddenTab
-          buttonText="Register"
-          buttonStyle={padding}
-          ref={registerFormRef}
-        >
-          <CredentialsForm
-            buttonText="Register new user"
-            onSumbit={submitRegister}
-            username={username}
-            password={password}
-            setUsername={setUsername}
-            setPassword={setPassword}
-          />
-        </HiddenTab>
-        <HiddenTab buttonText="Login" buttonStyle={padding} ref={loginFormRef}>
-          <CredentialsForm
-            buttonText="Log In"
-            onSumbit={submitLogin}
-            username={username}
-            password={password}
-            setUsername={setUsername}
-            setPassword={setPassword}
-          />
-        </HiddenTab>
+        {!user && (
+          <HiddenTab
+            buttonText="Register"
+            buttonStyle={padding}
+            ref={registerFormRef}
+          >
+            <CredentialsForm
+              buttonText="Register new user"
+              onSumbit={submitRegister}
+              username={username}
+              password={password}
+              setUsername={setUsername}
+              setPassword={setPassword}
+            />
+          </HiddenTab>
+        )}
+        {!user && (
+          <HiddenTab
+            buttonText="Login"
+            buttonStyle={padding}
+            ref={loginFormRef}
+          >
+            <CredentialsForm
+              buttonText="Log In"
+              onSumbit={submitLogin}
+              username={username}
+              password={password}
+              setUsername={setUsername}
+              setPassword={setPassword}
+            />
+          </HiddenTab>
+        )}
+        {user && (
+          <Link style={padding} onClick={logOut}>
+            Log Out
+          </Link>
+        )}
       </div>
 
       <Routes>
