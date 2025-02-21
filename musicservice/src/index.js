@@ -232,10 +232,12 @@ app.get("/api/albums/:id", async (request, response) => {
   response.json(wholeAlbum);
 });
 
-app.get("/api/artists/:id", (request, response) => {
+app.get("/api/artists/:id", async (request, response) => {
+  const query = database.prepare("SELECT * FROM artists WHERE id = ?");
+  const query2 = database.prepare("SELECT * FROM albums WHERE artist = ?");
   const id = request.params.id;
-  const artist = artists.find((e) => e.id == id);
-  const artistAlbums = albums.filter((e) => e.artist == artist.id);
+  const artist = await getAsync(query, id);
+  const artistAlbums = await allAsync(query2, id);
   const res = { artist, albums: artistAlbums };
   response.json(res);
 });

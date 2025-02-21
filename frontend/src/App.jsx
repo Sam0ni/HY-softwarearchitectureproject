@@ -104,11 +104,32 @@ const AlbumSearch = () => {
   );
 };
 
-const SingleAlbum = () => {
+const SingleAlbum = ({ user, token }) => {
   const [albumInfo, setAlbumInfo] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [error, setError] = useState(null);
+  const [written, setWritten] = useState("");
   const albumId = useParams().id;
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  };
+
+  const sendReview = async (event) => {
+    event.preventDefault();
+    const newReview = { album: albumId, review: written };
+    const response = await axios.post(
+      "http://localhost:3003/api/reviews",
+      newReview,
+      config
+    );
+    response.data.user = user.username;
+    setReviews([...reviews, response.data]);
+    setWritten("");
+  };
 
   useEffect(() => {
     axios
@@ -159,6 +180,21 @@ const SingleAlbum = () => {
           );
         })}
       </ol>
+      {user && (
+        <form onSubmit={sendReview}>
+          <p>Write a review: </p>
+          <textarea
+            name="postReview"
+            value={written}
+            onChange={(event) => {
+              setWritten(event.target.value);
+            }}
+          />
+          <div>
+            <button type="submit">Send Review</button>
+          </div>
+        </form>
+      )}
       <p>Reviews:</p>
       {reviews ? (
         <ul>
@@ -341,7 +377,10 @@ const App = () => {
       <Routes>
         <Route path="/" />
         <Route path="/albums" element={<AlbumSearch />} />
-        <Route path="/albums/:id" element={<SingleAlbum />} />
+        <Route
+          path="/albums/:id"
+          element={<SingleAlbum user={user} token={token} />}
+        />
         <Route path="/artists" element={<ArtistSearch />} />
         <Route path="/artists/:id" element={<SingleArtist />} />
       </Routes>
