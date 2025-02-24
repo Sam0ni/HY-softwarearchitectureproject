@@ -1,0 +1,128 @@
+http:
+  port: 8080
+admin:
+  port: 9876
+  host: localhost
+apiEndpoints:
+  albums:
+    host: "*"
+    paths: "/api/albums"
+    methods: "GET"
+  artists:
+    host: "*"
+    paths: ["/api/artists", /api/artists/:id]
+    methods: "GET"
+  user:
+    host: "*"
+    paths: ["/api/login", "/api/register"]
+    methods: "POST, OPTIONS"
+  reviewPost:
+    host: "*"
+    paths: "/api/reviews"
+    methods: "POST, OPTIONS"
+  singleAlbum:
+    host: "*"
+    paths: "/api/albums/:id"
+    methods: "GET"
+serviceEndpoints:
+  musicService:
+    url: "http://localhost:3002"
+  userService:
+    url: "http://localhost:3001"
+  reviewService:
+    url: "http://localhost:3003"
+policies:
+  - basic-auth
+  - cors
+  - expression
+  - key-auth
+  - log
+  - oauth2
+  - proxy
+  - rate-limit
+  - jwt
+  - multiProxy
+pipelines:
+  albumsPipeline:
+    apiEndpoints:
+      - albums
+    policies:
+      - log:
+          - action:
+              message: Getting Albums
+      - proxy:
+          - action:
+              serviceEndpoint: musicService
+              rewriteTarget: "/api/albums"
+              changeOrigin: true
+  artistsPipeline:
+    apiEndpoints:
+      - artists
+    policies:
+      - log:
+          - action:
+              message: Getting Artist(s)
+      - proxy:
+          - action:
+              serviceEndpoint: musicService
+              rewriteTarget: "/api/artists"
+              changeOrigin: true
+  userPipeline:
+    apiEndpoints:
+      - user
+    policies:
+      - log:
+          - action:
+              message: "Register/Login"
+              logLevel: "info"
+      - proxy:
+          - action:
+              serviceEndpoint: userService
+              rewriteTarget: "/api"
+              changeOrigin: true
+  reviewPostPipeline:
+    apiEndpoints:
+      - reviewPost
+    policies:
+      - cors:
+          - action:
+              origin: "*"
+              methods:
+                - GET
+                - POST
+                - PUT
+                - DELETE
+                - OPTIONS
+              allowedHeaders:
+                - Content-Type
+                - Authorization
+              credentials: true
+      - log:
+          - action:
+              message: ${req.headers.authorization}
+      - jwt:
+          - action:
+              secretOrPublicKey: temporarySecret
+              algorithms: ["HS256"]
+              checkCredentialExistence: false
+      - log:
+          - action:
+              message: "Posting a review"
+              logLevel: "info"
+      - proxy:
+          - action:
+              serviceEndpoint: reviewService
+              rewriteTarget: "/api"
+              changeOrigin: true
+  singleAlbumPipeline:
+    apiEndpoints:
+      - singleAlbum
+    policies:
+      - log:
+          - action:
+              message: "retrieving album info"
+              logLevel: "info"
+      - multiProxy:
+          - action:
+              service1: "http://localhost:3002/api/albums/:id"
+              service2: "http://localhost:3003/api/byalbum/:id"
