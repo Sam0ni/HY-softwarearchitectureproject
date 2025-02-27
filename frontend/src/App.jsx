@@ -19,7 +19,7 @@ const ArtistSearch = () => {
 
   useEffect(() => {
     axios.get("http://localhost:8080/api/artists").then((response) => {
-      setArtists(response.data);
+      setArtists(response.data.collection);
     });
   }, []);
 
@@ -87,7 +87,7 @@ const AlbumSearch = () => {
 
   useEffect(() => {
     axios.get("http://localhost:8080/api/albums").then((response) => {
-      setAlbums(response.data);
+      setAlbums(response.data.collection);
     });
   }, []);
 
@@ -127,6 +127,7 @@ const SingleAlbum = ({ user, token }) => {
       config
     );
     console.log(response.data);
+    console.log("whatta");
     response.data.user = user.username;
     setReviews([...reviews, response.data]);
     setWritten("");
@@ -136,8 +137,9 @@ const SingleAlbum = ({ user, token }) => {
     axios
       .get(`http://localhost:8080/api/albums/${albumId}`)
       .then((response) => {
-        setAlbumInfo(response.data.data[0]);
-        setReviews(response.data.data[1]);
+        console.log(response);
+        setAlbumInfo(response.data);
+        setReviews(response.data.collection);
       })
       .catch((e) => {
         console.log(e);
