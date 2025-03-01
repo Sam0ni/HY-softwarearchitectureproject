@@ -107,7 +107,9 @@ app.post("/api/login", async (request, response) => {
     id: result.id,
   };
 
-  const token = jwt.sign(userForToken, "temporarySecret");
+  const options = { issuer: "userservice" };
+
+  const token = jwt.sign(userForToken, "temporarySecret", options);
 
   response.status(200).send({ token, username: result.username });
 });

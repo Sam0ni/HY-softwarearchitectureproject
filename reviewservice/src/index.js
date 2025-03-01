@@ -75,6 +75,7 @@ app.get("/api/reviews", async (request, response) => {
 
 app.get("/api/byalbum/:id", async (request, response) => {
   const id = request.params.id;
+  console.log(id);
   const query = database.prepare("SELECT * FROM reviews WHERE album = ?");
   const allReviews = await allAsync(query, id);
   for (const revi of allReviews) {
@@ -88,6 +89,7 @@ app.get("/api/byalbum/:id", async (request, response) => {
 });
 
 app.post("/api/reviews", async (request, response) => {
+  console.log("HALLOO");
   const statement = database.prepare(
     "INSERT INTO reviews (user, album, review) VALUES (?,?,?)"
   );
@@ -110,6 +112,7 @@ app.post("/api/reviews", async (request, response) => {
     const result = await getAsync(query, newId);
     response.status(201).json(result);
   } catch (err) {
+    console.log("HEELOUS");
     console.log(err);
     response.status(401).json(err);
   }

@@ -1,0 +1,87 @@
+_format_version: "3.0"
+
+consumers:
+  - username: mr-client
+
+jwt_secrets:
+  - consumer: mr-client
+    key: userservice
+    secret: temporarySecret
+
+services:
+  - name: userservice
+    url: http://host.docker.internal:3001
+    routes:
+      - name: register
+        paths:
+          - /api/register
+        methods:
+          - POST
+          - OPTIONS
+        strip_path: false
+      - name: login
+        paths:
+          - /api/login
+        methods:
+          - POST
+          - OPTIONS
+        strip_path: false
+  - name: musicservice
+    url: http://host.docker.internal:3002
+    routes:
+      - name: albums
+        paths:
+          - /api/albums
+        methods:
+          - GET
+        strip_path: false
+      - name: single-album
+        paths:
+          - /api/albums/
+        strip_path: false
+        methods:
+          - GET
+      - name: artists
+        paths:
+          - /api/artists
+        methods:
+          - GET
+        strip_path: false
+      - name: single-artist
+        paths:
+          - /api/artists/
+        strip_path: false
+        methods:
+          - GET
+  - name: reviewservice
+    url: http://host.docker.internal:3003
+    routes:
+      - name: reviews
+        paths:
+          - /api/byalbum/
+        strip_path: false
+        methods:
+          - GET
+      - name: post-review
+        paths:
+          - /api/reviews
+        strip_path: false
+        methods:
+          - POST
+          - OPTIONS
+        plugins:
+          - name: cors
+            config:
+              origins: ["*"]
+              methods:
+                - POST
+                - OPTIONS
+              headers:
+                - Content-Type
+                - Authorization
+              max_age: 3600
+              credentials: false
+          - name: jwt
+            config:
+              key_claim_name: iss
+              secret_is_base64: false

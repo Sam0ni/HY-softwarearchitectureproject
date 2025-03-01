@@ -18,8 +18,8 @@ const ArtistSearch = () => {
   const [artists, setArtists] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/api/artists").then((response) => {
-      setArtists(response.data.collection);
+    axios.get("http://localhost:8000/api/artists").then((response) => {
+      setArtists(response.data);
     });
   }, []);
 
@@ -44,7 +44,7 @@ const SingleArtist = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8080/api/artists/${artistId}`)
+      .get(`http://localhost:8000/api/artists/${artistId}`)
       .then((response) => {
         setArtistInfo(response.data.artist);
         setAlbums(response.data.albums);
@@ -86,8 +86,8 @@ const AlbumSearch = () => {
   const [albums, setAlbums] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8080/api/albums").then((response) => {
-      setAlbums(response.data.collection);
+    axios.get("http://localhost:8000/api/albums").then((response) => {
+      setAlbums(response.data);
     });
   }, []);
 
@@ -122,12 +122,10 @@ const SingleAlbum = ({ user, token }) => {
     event.preventDefault();
     const newReview = { album: albumId, review: written };
     const response = await axios.post(
-      "http://localhost:8080/api/reviews",
+      "http://localhost:8000/api/reviews",
       newReview,
       config
     );
-    console.log(response.data);
-    console.log("whatta");
     response.data.user = user.username;
     setReviews([...reviews, response.data]);
     setWritten("");
@@ -135,15 +133,20 @@ const SingleAlbum = ({ user, token }) => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8080/api/albums/${albumId}`)
+      .get(`http://localhost:8000/api/albums/${albumId}`)
       .then((response) => {
         console.log(response);
         setAlbumInfo(response.data);
-        setReviews(response.data.collection);
       })
       .catch((e) => {
         console.log(e);
         setError("An error occurred while fetching data");
+      });
+    axios
+      .get(`http://localhost:8000/api/byalbum/${albumId}`)
+      .then((response) => {
+        console.log(response);
+        setReviews(response.data);
       });
   }, [albumId]);
 
@@ -280,7 +283,7 @@ const App = () => {
   const submitLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8080/api/login", {
+      const response = await axios.post("http://localhost:8000/api/login", {
         username,
         password,
       });
@@ -297,7 +300,7 @@ const App = () => {
   const submitRegister = (event) => {
     event.preventDefault();
     axios
-      .post("http://localhost:8080/api/register", { username, password })
+      .post("http://localhost:8000/api/register", { username, password })
       .then((response) => {
         console.log(response);
         clearForms();
